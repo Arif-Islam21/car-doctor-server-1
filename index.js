@@ -37,6 +37,7 @@ async function run() {
     const bookingCollection = client.db("carDoctor").collection("bookings");
 
     // authentication related apis
+
     app.post("/jwt", async (req, res) => {
       const user = req.body;
       console.log("user for token", user);
@@ -51,6 +52,12 @@ async function run() {
           sameSite: "none",
         })
         .send({ success: true });
+    });
+
+    app.post("/logout", async (req, res) => {
+      const user = req.body;
+      console.log("logging out", user);
+      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
     });
 
     // services related apis
