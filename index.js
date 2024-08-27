@@ -25,8 +25,17 @@ const logger = async (req, res, next) => {
 
 const verifyToken = (req, res, next) => {
   const token = req?.cookies?.token;
-  console.log("token in the middleware", token);
-  next();
+  // console.log("token in the middleware", token);
+  if (!token) {
+    return res.status(401).send({ message: "unAuthorized" });
+  }
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ message: "unauthorized" });
+    }
+    req.user = decoded;
+    next();
+  });
 };
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.n7e36sw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0`;
@@ -95,7 +104,10 @@ async function run() {
     // bookings
     app.get("/bookings", logger, verifyToken, async (req, res) => {
       console.log(req.query.email);
-      // console.log("cook cook coook", req.cookies);
+      console.log("token owner info", req.user);
+      if (req.user.email !== req.query.email) {
+        return res.status(403).send("forbidden access");
+      }
       let query = {};
       if (req.query?.email) {
         query = { email: req.query.email };
